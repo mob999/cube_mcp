@@ -1,5 +1,5 @@
 {
-  "name": "cube_mcp",
+  "name": "@mob999/cube_mcp",
   "version": "1.0.0",
   "description": "An official semantic layer MCP server for Cube.js",
   "main": "dist/index.js",
