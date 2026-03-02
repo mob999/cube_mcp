@@ -1,0 +1,5 @@
+node_modules
+dist
+.env
+lint_output.txt
+.DS_Store
