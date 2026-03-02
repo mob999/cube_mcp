@@ -1,6 +1,6 @@
 {
   "name": "@mob999/cube_mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "An official semantic layer MCP server for Cube.js",
   "main": "dist/index.js",
   "bin": {
@@ -24,6 +24,10 @@
   ],
   "author": "Your Name",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mob999/cube_mcp.git"
+  },
   "dependencies": {
     "@cubejs-client/core": "^1.6.17",
     "@modelcontextprotocol/sdk": "^1.27.1",
