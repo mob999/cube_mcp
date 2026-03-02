@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [1.0.6] - 2026-03-02
+### Added
+- Feature: The `execute_query` tool now writes the full payload of execution results to a temporary file located at `/tmp/cube_query_result_<timestamp>.json` and returns this absolute path `result_filepath` in the final query metadata, circumventing the UI limits.
+
+### Fixed
+- Fixed a bug where data extraction was returning 0 rows by swapping from `loadResponse.data` to the robust `rawData()` method provided by the Cube.js Client SDK.
+
 ## [1.0.5] - 2026-03-02
 ### Fixed
 - Addressed `invalid character 'd'` error when initialized via Stdio by removing `dotenv.config()` stdout logging pollution, ensuring pristine JSON-RPC communication.

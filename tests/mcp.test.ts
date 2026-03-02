@@ -19,12 +19,14 @@ jest.unstable_mockModule('@cubejs-client/core', () => {
                 ]
             }),
             load: jest.fn<any>().mockResolvedValue({
-                loadResponse: {
-                    data: [
-                        { "Components.id": "1", "Components.count": 5 },
-                        { "Components.id": "2", "Components.count": 10 }
-                    ]
-                }
+                rawData: () => [
+                    { "Components.id": "1", "Components.count": 5 },
+                    { "Components.id": "2", "Components.count": 10 }
+                ],
+                tableColumns: () => [
+                    { key: "Components.id" },
+                    { key: "Components.count" }
+                ]
             })
         })
     };

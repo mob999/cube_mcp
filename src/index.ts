@@ -9,6 +9,8 @@ import {
 // Environment variables are typically injected by the MCP client config.
 // dotenv.config() is removed to prevent JSON-RPC stdout pollution.
 import cubejs from "@cubejs-client/core";
+import * as fs from "fs";
+import * as path from "path";
 // Initialize Cube.js Client
 const cubejsApiUrl = process.env.CUBEJS_API_URL || "http://localhost:4000/cubejs-api/v1";
 // @ts-ignore: cubejs default export can be tricky with some tsconfig setups, but typically works
@@ -156,18 +158,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             }
 
             const resultSet = await client.load(query);
-            const data = resultSet.loadResponse.data || [];
+            const data = resultSet.rawData() || [];
 
             const is_truncated = data.length > 50;
             const preview_limit = 50;
+            const columns = resultSet.tableColumns().map((c: any) => c.key);
+
+            // Save full context to tmp space
+            const timestamp = Date.now();
+            const tmpFilepath = path.join("/tmp", `cube_query_result_${timestamp}.json`);
+            fs.writeFileSync(tmpFilepath, JSON.stringify(data, null, 2), "utf-8");
 
             const resultPayload = {
                 entity: entity_name,
                 num_rows: data.length,
-                columns: data.length > 0 ? Object.keys(data[0]) : [],
+                columns: columns,
                 preview: data.slice(0, preview_limit),
                 is_truncated,
-                message: `Successfully executed query. Received ${data.length} rows.`
+                result_filepath: tmpFilepath,
+                message: `Successfully executed query. Received ${data.length} rows. Full context saved at: ${tmpFilepath}`
             };
 
             return {
