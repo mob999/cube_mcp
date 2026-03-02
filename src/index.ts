@@ -6,11 +6,9 @@ import {
     ListToolsRequestSchema,
     Tool,
 } from "@modelcontextprotocol/sdk/types.js";
+// Environment variables are typically injected by the MCP client config.
+// dotenv.config() is removed to prevent JSON-RPC stdout pollution.
 import cubejs from "@cubejs-client/core";
-import dotenv from "dotenv";
-
-dotenv.config();
-
 // Initialize Cube.js Client
 const cubejsApiUrl = process.env.CUBEJS_API_URL || "http://localhost:4000/cubejs-api/v1";
 // @ts-ignore: cubejs default export can be tricky with some tsconfig setups, but typically works

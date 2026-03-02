@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2026-03-02
+### Fixed
+- Addressed `invalid character 'd'` error when initialized via Stdio by removing `dotenv.config()` stdout logging pollution, ensuring pristine JSON-RPC communication.
+
 ## [1.0.4] - 2026-03-02
 ### Fixed
 - Added `@babel/runtime` as a direct dependency. This resolves a `MODULE_NOT_FOUND` error that occurred when executing `npx -y @mob999/cube_mcp` due to `@cubejs-client/core` importing Babel helpers internally without specifying the runtime dependency.
