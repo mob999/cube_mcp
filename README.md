@@ -12,7 +12,14 @@ It provides advanced AI assistants (like Claude, Cursor, etc.) with semantic lay
 - Node.js (v18 or higher recommended)
 - A running instance of Cube.js
 
-## Installation & Build
+## Quick Start
+
+You can run the published MCP server directly without installing it manually:
+```bash
+npx -y @mob999/cube_mcp
+```
+
+## Local Development & Build
 
 1. **Install dependencies:**
    ```bash
@@ -35,8 +42,6 @@ By default, the server expects your Cube.js API to be available at `http://local
 
 You can override this by setting the `CUBEJS_API_URL` environment variable.
 
-## Connecting to an MCP Client (e.g., Cursor)
-
 To integrate this semantic layer into Cursor or any other MCP-compatible IDE/Agent, configure it as a **stdio** tool.
 
 **Example `mcp.json` / Client Configuration:**
@@ -45,8 +50,8 @@ To integrate this semantic layer into Cursor or any other MCP-compatible IDE/Age
 {
   "mcpServers": {
     "CubeSemanticLayer": {
-      "command": "node",
-      "args": ["/path/to/your/cube_mcp/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "@mob999/cube_mcp"],
       "env": {
         "CUBEJS_API_URL": "http://localhost:4000/cubejs-api/v1"
       }
@@ -55,4 +60,4 @@ To integrate this semantic layer into Cursor or any other MCP-compatible IDE/Age
 }
 ```
 
-*Note: Ensure you provide the **absolute path** to the compiled `dist/index.js` file in your client's configuration.*
+*Note: The `-y` flag allows `npx` to automatically download and run the package without prompting for confirmation.*
