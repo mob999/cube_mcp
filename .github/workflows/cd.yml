@@ -1,0 +1,98 @@
+name: Publish to NPM
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write    # needed for creating a release
+  id-token: write    # required for npm provenance
+
+jobs:
+  check-version:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    outputs:
+      has_changed: ${{ steps.check.outputs.changed == 'true' }}
+      version: ${{ steps.check.outputs.version }}
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      
+      - name: Check for package.json version change
+        id: check
+        run: |
+          # If this is the very first commit, assume version changed setup
+          if ! git rev-parse HEAD~1 >/dev/null 2>&1; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            NEW_VERSION=$(node -p "require('./package.json').version")
+            echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Get old and new versions robustly
+          OLD_VERSION=$(git show HEAD~1:package.json | grep '"version"' | head -1 | awk -F'"' '{print $4}' || true)
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          
+          if [ "$OLD_VERSION" != "$NEW_VERSION" ] && [ ! -z "$NEW_VERSION" ]; then
+            echo "Version changed from $OLD_VERSION to $NEW_VERSION"
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+          else
+            echo "No version change."
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+  publish:
+    needs: check-version
+    if: needs.check-version.outputs.has_changed == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        # Uses standard npm install for max compatibility if package-lock is missing
+        run: npm install
+
+      - name: Build package
+        run: npm run build
+      
+      - name: Publish package to NPM
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Extract Release Notes
+        id: extract_notes
+        run: |
+          VERSION="${{ needs.check-version.outputs.version }}"
+          awk -v ver="$VERSION" '
+            /^## \['"$VERSION"'\]/ {p=1; next}
+            /^## \[/ {if (p) exit}
+            p
+          ' CHANGELOG.md > RELEASE_NOTES.txt
+          
+          if [ ! -s RELEASE_NOTES.txt ]; then
+            echo "Release v$VERSION. No specific notes found in CHANGELOG.md." > RELEASE_NOTES.txt
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.check-version.outputs.version }}
+          name: Release v${{ needs.check-version.outputs.version }}
+          body_path: RELEASE_NOTES.txt
