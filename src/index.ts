@@ -11,6 +11,7 @@ import {
 import cubejs from "@cubejs-client/core";
 import * as fs from "fs";
 import * as path from "path";
+import { buildCubeQuery } from "./query";
 // Initialize Cube.js Client
 const cubejsApiUrl = process.env.CUBEJS_API_URL || "http://localhost:4000/cubejs-api/v1";
 // @ts-ignore: cubejs default export can be tricky with some tsconfig setups, but typically works
@@ -54,7 +55,7 @@ const EXECUTE_QUERY_TOOL: Tool = {
                     type: "object",
                     properties: {
                         member: { type: "string", description: "Fully qualified field name (e.g., 'EntityName.FieldName')" },
-                        operator: { type: "string", description: "Comparison operator: 'equals', 'notEquals', 'gt', 'gte', 'lt', 'lte', 'contains', 'notContains', 'set', 'notSet'" },
+                        operator: { type: "string", description: "Comparison operator: 'equals', 'notEquals', 'contains', 'notContains', 'startsWith', 'notStartsWith', 'endsWith', 'notEndsWith', 'gt', 'gte', 'lt', 'lte', 'inDateRange', 'notInDateRange', 'beforeDate', 'beforeOrOnDate', 'afterDate', 'afterOrOnDate', 'set', 'notSet'" },
                         values: {
                             type: "array",
                             items: { type: "string" },
@@ -65,19 +66,117 @@ const EXECUTE_QUERY_TOOL: Tool = {
                 },
                 description: "Optional filters to apply to the query."
             },
+            timeDimensions: {
+                type: "array",
+                items: {
+                    type: "object",
+                    properties: {
+                        dimension: {
+                            type: "string",
+                            description: "Time dimension member (e.g., 'Orders.createdAt')."
+                        },
+                        granularity: {
+                            type: "string",
+                            description: "Optional time granularity such as 'day', 'week', or 'month'."
+                        },
+                        dateRange: {
+                            oneOf: [
+                                { type: "string" },
+                                {
+                                    type: "array",
+                                    items: { type: "string" },
+                                    minItems: 2,
+                                    maxItems: 2
+                                }
+                            ],
+                            description: "Optional date range as a preset string or [start, end]."
+                        },
+                        compareDateRange: {
+                            type: "array",
+                            items: {
+                                oneOf: [
+                                    { type: "string" },
+                                    {
+                                        type: "array",
+                                        items: { type: "string" },
+                                        minItems: 2,
+                                        maxItems: 2
+                                    }
+                                ]
+                            },
+                            description: "Optional compare date ranges."
+                        }
+                    },
+                    required: ["dimension"]
+                },
+                description: "Optional Cube time dimensions."
+            },
+            segments: {
+                type: "array",
+                items: { type: "string" },
+                description: "Optional Cube segments."
+            },
             limit: {
                 type: "number",
                 description: "Max rows to return (default None)."
+            },
+            rowLimit: {
+                type: "number",
+                description: "Optional Cube rowLimit."
+            },
+            offset: {
+                type: "number",
+                description: "Optional row offset."
+            },
+            order: {
+                type: "array",
+                items: {
+                    type: "object",
+                    properties: {
+                        member: {
+                            type: "string",
+                            description: "Fully qualified field name to sort by (e.g., 'Components.count')."
+                        },
+                        direction: {
+                            type: "string",
+                            enum: ["asc", "desc", "none"],
+                            description: "Sort direction."
+                        }
+                    },
+                    required: ["member", "direction"]
+                },
+                description: "Optional multi-column sort rules applied in order."
+            },
+            timezone: {
+                type: "string",
+                description: "Optional query timezone, for example 'UTC' or 'Asia/Shanghai'."
+            },
+            renewQuery: {
+                type: "boolean",
+                description: "Optional Cube renewQuery flag."
+            },
+            ungrouped: {
+                type: "boolean",
+                description: "Optional Cube ungrouped flag."
+            },
+            responseFormat: {
+                type: "string",
+                enum: ["compact", "default"],
+                description: "Optional Cube response format."
+            },
+            total: {
+                type: "boolean",
+                description: "Optional Cube total flag."
             }
         },
-        required: ["entity_name", "measures"],
+        required: ["entity_name"],
     },
 };
 
 const server = new Server(
     {
         name: "cubejs-ts-mcp",
-        version: "1.0.0",
+        version: "1.0.7",
     },
     {
         capabilities: {
@@ -138,24 +237,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
 
         else if (name === "execute_query") {
-            const { entity_name, measures, dimensions = [], filters = [], limit } = args as any;
-
-            const query: any = {
-                measures,
-                dimensions
-            };
-
-            if (filters && filters.length > 0) {
-                query.filters = filters.map((f: any) => ({
-                    member: f.member,
-                    operator: f.operator,
-                    values: f.values.map((v: any) => String(v))
-                }));
-            }
-
-            if (limit !== undefined && limit !== null) {
-                query.limit = limit;
-            }
+            const executeQueryArgs = args as any;
+            const { entity_name } = executeQueryArgs;
+            const query = buildCubeQuery(executeQueryArgs);
 
             const resultSet = await client.load(query);
             const data = resultSet.rawData() || [];

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.7] - 2026-03-03
+### Added
+- Feature: Added `order` support to the `execute_query` MCP tool so Cube queries can specify multi-column sorting with `asc`, `desc`, or `none`.
+- Feature: Expanded `execute_query` to support the rest of Cube's common query fields, including `timeDimensions`, `segments`, `rowLimit`, `offset`, `timezone`, `renewQuery`, `ungrouped`, `responseFormat`, and `total`.
+- Feature: `execute_query` now allows dimensions-only queries by making `measures` optional, matching Cube's native query interface more closely.
+
 ## [1.0.6] - 2026-03-02
 ### Added
 - Feature: The `execute_query` tool now writes the full payload of execution results to a temporary file located at `/tmp/cube_query_result_<timestamp>.json` and returns this absolute path `result_filepath` in the final query metadata, circumventing the UI limits.

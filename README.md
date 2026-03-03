@@ -6,7 +6,7 @@ It provides advanced AI assistants (like Claude, Cursor, etc.) with semantic lay
 
 ## Features
 - **`discover_entities`**: Introspects the Cube.js metadata (`/meta`) and explains the available Cubes, Dimensions, and Measures to the LLM.
-- **`execute_query`**: Executes semantic queries (`/load`) with precise types, filtering, and result truncation to prevent context window overflow.
+- **`execute_query`**: Executes semantic queries (`/load`) with support for Cube query fields like filters, sorting, time dimensions, pagination, timezone, and result truncation.
 
 ## Prerequisites
 - Node.js (v18 or higher recommended)
@@ -35,6 +35,52 @@ npx -y @mob999/cube_mcp
 ## Development & Testing
 - **Run Tests:** `npm test`
 - **Lint Code:** `npm run lint`
+
+## Query Features
+
+`execute_query` supports:
+
+- `measures`
+- `dimensions`
+- `filters`
+- `timeDimensions`
+- `segments`
+- `limit`
+- `rowLimit`
+- `offset`
+- `order`
+- `timezone`
+- `renewQuery`
+- `ungrouped`
+- `responseFormat`
+- `total`
+
+Example:
+
+```json
+{
+  "entity_name": "Components",
+  "measures": ["Components.count"],
+  "dimensions": ["Components.id"],
+  "timeDimensions": [
+    {
+      "dimension": "Components.createdAt",
+      "granularity": "day",
+      "dateRange": ["2026-01-01", "2026-01-31"]
+    }
+  ],
+  "order": [
+    { "member": "Components.count", "direction": "desc" },
+    { "member": "Components.id", "direction": "asc" }
+  ],
+  "limit": 100,
+  "rowLimit": 500,
+  "offset": 0,
+  "timezone": "UTC",
+  "responseFormat": "compact",
+  "total": true
+}
+```
 
 ## Configuration
 
